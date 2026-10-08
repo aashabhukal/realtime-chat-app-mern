@@ -1,0 +1,31 @@
+import axios from 'axios';
+import { storage } from '../utils/storage';
+
+const api = axios.create({
+  baseURL: 'http://localhost:8080/api',
+});
+
+// Request me token lagao
+api.interceptors.request.use((config) => {
+  const token = storage.getToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// 401 aaye to logout
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      storage.clear();
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
+export default api;
